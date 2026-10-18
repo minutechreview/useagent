@@ -36,6 +36,11 @@ export interface ApiBot {
   /** Delegated threads opened for this bot by @mentions, and their root run ids. */
   handoffs: number;
   handoffThreadIds: string[];
+  /** Whether this viewer may change the bot's setup (only its creator may);
+   *  absent from an older backend, which let them. */
+  editable?: boolean;
+  /** The creator as the member directory names them. */
+  ownerName?: string | null;
 }
 
 /** Wire shape of GET /api/bots/:id/routines. */

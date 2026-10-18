@@ -213,7 +213,7 @@ export function RoutinesSection({ bot }: { bot: ApiBot }) {
     <section className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
         <h2 className="text-body-2-medium text-text-primary">Routines</h2>
-        {!adding && (
+        {!adding && bot.editable !== false && (
           <Button variant="ghost" size="small" iconOnly leadingIcon={RiAddLine} aria-label="Add routine" onClick={() => setAdding(true)} />
         )}
       </div>
@@ -230,7 +230,11 @@ export function RoutinesSection({ bot }: { bot: ApiBot }) {
       {routines === null && !error ? (
         <p className="text-caption-1-regular text-text-tertiary">Loading</p>
       ) : routines && routines.length === 0 && !adding ? (
-        <p className="text-body-2-regular text-text-tertiary">No routines yet. Add one and {bot.name} runs it on schedule into this thread.</p>
+        <p className="text-body-2-regular text-text-tertiary">
+          {bot.editable === false
+            ? "No routines yet."
+            : `No routines yet. Add one and ${bot.name} runs it on schedule into this thread.`}
+        </p>
       ) : (
         routines?.map((routine) => <RoutineRow key={routine.id} bot={bot} routine={routine} onChange={changed} />)
       )}
