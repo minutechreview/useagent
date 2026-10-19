@@ -274,4 +274,17 @@ describe("Markdown mermaid blocks", () => {
     expect(html).toContain("const answer = 42;");
     expect(html).toContain(">TypeScript<");
   });
+
+  test("keeps the full language name when it has symbols", () => {
+    const cases: [string, string][] = [
+      ["c++", "C++"],
+      ["c#", "C#"],
+      ["objective-c", "Objective-C"],
+      ["f#", "F#"],
+    ];
+    for (const [fence, label] of cases) {
+      const html = renderToStaticMarkup(<Markdown>{`\`\`\`${fence}\nint x = 1;\n\`\`\``}</Markdown>);
+      expect(html).toContain(`>${label}<`);
+    }
+  });
 });

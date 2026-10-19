@@ -48,7 +48,8 @@ function parseMarkdownIntoBlocks(markdown: string): string[] {
 
 function extractLanguage(className?: string): string {
   if (!className) return "plaintext";
-  const match = className.match(/language-(\w+)/);
+  // The whole class token, so c++, c#, objective-c and f# keep their symbols.
+  const match = className.match(/language-(\S+)/);
   return match ? match[1] : "plaintext";
 }
 
