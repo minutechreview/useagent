@@ -55,6 +55,14 @@ export class LoopbackForwarders {
     }
     const entry: Entry = { forwarder: null as unknown as Forwarder, connections: 0, lastActivity: this.now() };
     const forwarders = this;
+    // A socket can report error() and then close(); count it out of the listener once.
+    const releaseConnection = (socket: Socket): boolean => {
+      if (socket.data.closed) return false;
+      socket.data.closed = true;
+      entry.connections = Math.max(0, entry.connections - 1);
+      entry.lastActivity = forwarders.now();
+      return true;
+    };
     const listener = Bun.listen<Socket["data"]>({
       hostname: "127.0.0.1",
       port: 0,
@@ -100,15 +108,11 @@ export class LoopbackForwarders {
           void drain(socket);
         },
         close(socket) {
-          const data = socket.data;
-          if (data.closed) return;
-          data.closed = true;
-          entry.connections = Math.max(0, entry.connections - 1);
-          entry.lastActivity = forwarders.now();
-          data.stream?.end();
+          if (!releaseConnection(socket)) return;
+          socket.data.stream?.end();
         },
         error(socket) {
-          socket.data.closed = true;
+          releaseConnection(socket);
           socket.data.stream?.reset("browser side errored");
         },
         drain() {
