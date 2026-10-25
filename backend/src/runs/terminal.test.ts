@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { SandboxNotFoundError } from "@useagent/sandbox-contract";
 import { PersonalSandboxConnectionUnavailableError } from "../sandboxes/binding";
 import { terminalFailureNotice, TERMINAL_UNAVAILABLE_NOTICE } from "./terminal";
 
@@ -16,7 +17,9 @@ describe("terminal failure notices", () => {
   });
 
   test("keeps absent sandboxes retryable without hiding other failures", () => {
-    expect(terminalFailureNotice(new Error("Sandbox abc not found"))).toContain("no live sandbox yet");
+    const gone = terminalFailureNotice(new SandboxNotFoundError());
+    expect(gone).toContain("no live sandbox yet");
+    expect(gone).not.toContain("\x1b[31m");
     const transient = terminalFailureNotice(new Error("connection timed out"));
     expect(transient).toContain("connection timed out");
     expect(transient).not.toContain(TERMINAL_UNAVAILABLE_NOTICE);

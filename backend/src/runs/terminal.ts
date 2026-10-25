@@ -8,19 +8,24 @@ import { resolvePreviewSandbox } from "./preview-proxy";
 import { errorMessage } from "../util/error-message";
 import { withoutSandboxVendor } from "../sandboxes/provider";
 import { createTerminalChunkDecoder } from "./terminal-decode";
-import { isSandboxTerminalUnavailableError } from "@useagent/sandbox-contract";
+import { isSandboxTerminalUnavailableError, SandboxNotFoundError } from "@useagent/sandbox-contract";
 import { getThreadExpectedSandbox, PersonalSandboxConnectionUnavailableError } from "../sandboxes/binding";
 import { watchThreadSandbox } from "../engines/sandbox-runtime";
 
 /** The notice line the pane recognizes as a declared capability gap (no reconnect loop). */
 export const TERMINAL_UNAVAILABLE_NOTICE = "[UseAgent] terminal unavailable:";
 
+/** Providers throw SandboxNotFoundError ("The sandbox does not exist") when the sandbox is gone. */
+function isSandboxNotFound(error: unknown): boolean {
+  return error instanceof SandboxNotFoundError || (error instanceof Error && error.name === "SandboxNotFoundError");
+}
+
 export function terminalFailureNotice(error: unknown): string {
   const message = withoutSandboxVendor(errorMessage(error));
   if (error instanceof PersonalSandboxConnectionUnavailableError || isSandboxTerminalUnavailableError(error)) {
     return `\r\n\x1b[2m${TERMINAL_UNAVAILABLE_NOTICE} ${message}\x1b[0m\r\n`;
   }
-  if (/not found|no live sandbox/i.test(message)) {
+  if (isSandboxNotFound(error) || /not found|no live sandbox/i.test(message)) {
     return "\r\n\x1b[2m[UseAgent] no live sandbox yet\x1b[0m\r\n";
   }
   return `\r\n\x1b[31m[UseAgent] ${message}\x1b[0m\r\n`;
